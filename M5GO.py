@@ -11,7 +11,7 @@ from mstate import *
 # import _thread
 # from M5GUI import *
 
-VERSION = "0.10"
+VERSION = "0.11"
 COLOR_GRAY = const(0xd7ceca)
 
 # -------- Neopixel LED ---------
@@ -89,40 +89,44 @@ prewstate = MStateManager()
 # -------- PREW_SPEAKER --------
 def speaker_start(obj):
   lcd.image(0, 0, '/flash/img/3-1.jpg', type=lcd.JPG)
-  from machine import I2S
-  obj['i2s'] = I2S( mode = I2S.MODE_MASTER | I2S.MODE_TX | I2S.MODE_DAC_BUILT_IN )
   obj['isPlaying'] = False
-  obj['wav'] = 0
+  obj['wav'] = None
+  obj['i2s'] = None
 
 def speaker_loop(obj):
+  global ii2s
   import wave
   i2s = obj['i2s']
   wav = obj['wav']
-  if buttonB.wasPressed() and obj['isPlaying'] == False:
-    wav = wave.open('res/mix.wav')
-    i2s.set_dac_mode(i2s.DAC_RIGHT_EN)
-    i2s.sample_rate(wav.getframerate())
-    i2s.bits(wav.getsampwidth() * 8)
-    i2s.nchannels(wav.getnchannels()) 
-    i2s.volume(50)    
-    obj['isPlaying'] = True
-    while not buttonB.isReleased(): # wait release button
-      pass
-    i2s.start()
   if obj['isPlaying']:
-    data = wav.readframes(256)
-    if len(data) > 0:
-      i2s.write(data)
-    if buttonB.isPressed() or len(data) <= 0:
-      wav.close()
-      i2s.stop()
-      obj['isPlaying'] = False
-  obj['wav'] = wav
+    while True:
+      data = wav.readframes(256)
+      if len(data) > 0:
+        i2s.write(data)
+      if buttonA.isPressed() or buttonB.wasPressed() or buttonC.isPressed() or (len(data) <= 0):
+        wav.close()
+        i2s.deinit()
+        obj['isPlaying'] = False
+        break
+  else:
+    if buttonB.wasPressed() and (not obj['isPlaying']):
+      wav = wave.open('res/mix.wav')
+      from machine import I2S
+      i2s = I2S( mode = I2S.MODE_MASTER | I2S.MODE_TX | I2S.MODE_DAC_BUILT_IN )
+      i2s.set_dac_mode(i2s.DAC_RIGHT_EN)
+      i2s.sample_rate(wav.getframerate())
+      i2s.bits(wav.getsampwidth() * 8)
+      i2s.nchannels(wav.getnchannels()) 
+      i2s.volume(70)    
+      while not buttonB.isReleased(): # wait release button
+        pass
+      obj['i2s'] = i2s
+      ii2s = i2s
+      obj['wav'] = wav
+      obj['isPlaying'] = True
 
-  
 def speaker_end(obj):
   try:
-    obj['i2s'].stop()
     obj['i2s'].deinit()
     obj['wav'].close()
   except:
@@ -294,7 +298,6 @@ def motion_loop(obj):
       lcd.circle(230, 150, 20, lcd.RED, lcd.RED)
     else:
       lcd.circle(230, 150, 20, COLOR_GRAY, COLOR_GRAY)
-    pass
 
 prewstate.register("PREW_MOTION", MState(start=motion_start, loop=motion_loop))
 
@@ -303,7 +306,6 @@ prewstate.register("PREW_MOTION", MState(start=motion_start, loop=motion_loop))
 def exrgb_start(obj):
   lcd.image(0, 0, '/flash/img/3-7.jpg', type=lcd.JPG)
   obj['rgb'] = units.RGB(units.PORTB)
-  pass
 
 def exrgb_loop(obj):
   if time.ticks_ms() % 200 == 0:
@@ -311,11 +313,9 @@ def exrgb_loop(obj):
     rgb.setColor(lcd.RED,   1)
     rgb.setColor(lcd.GREEN, 2)
     rgb.setColor(lcd.BLUE,  3)
-  pass
 
 def exrgb_end(obj):
   obj['rgb'].deinit()
-  pass
 
 prewstate.register("PREW_EXRGB", MState(start=exrgb_start, loop=exrgb_loop, end=exrgb_end))
 
@@ -346,7 +346,6 @@ def ir_loop(obj):
 
 def ir_end(obj):
   obj['tx'].deinit()
-  pass
 
 prewstate.register("PREW_IR", MState(start=ir_start, loop=ir_loop, end=ir_end))
 
@@ -425,19 +424,19 @@ def startup_loop(obj):
       lcd.print('%d' % ((timeout-time.ticks_ms())//1000), 300, 5, COLOR_GRAY)
     loading_animat()
     # ------ LED ------
-    if time.ticks_ms() % 2 == 0:
-      if obj['lcdbrs'] < 500:
-        obj['lcdbrs'] += 2
-        lcd.setBrightness(obj['lcdbrs'])
-      np.brightness(obj['brs'])
-      if obj['dect'] == True:
-        obj['brs'] += 1
-        if obj['brs'] >= 100:
-          obj['dect'] = False
-      else:
-        obj['brs'] -= 1
-        if obj['brs'] <= 0:
-          obj['dect'] = True
+    # if time.ticks_ms() % 2 == 0:
+    if obj['lcdbrs'] < 500:
+      obj['lcdbrs'] += 2
+      lcd.setBrightness(obj['lcdbrs'])
+    np.brightness(obj['brs'])
+    if obj['dect'] == True:
+      obj['brs'] += 1
+      if obj['brs'] >= 100:
+        obj['dect'] = False
+    else:
+      obj['brs'] -= 1
+      if obj['brs'] <= 0:
+        obj['dect'] = True
     gc.collect()
 
 def startup_end(obj):
@@ -564,5 +563,3 @@ def start():
     except Exception as e:
       print('---- Exception ----')
       print(e)
-
-  
