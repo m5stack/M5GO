@@ -10,3 +10,6 @@ import M5GO
 M5GO.start()
 
 gc.collect()
+
+
+# ./BUILD.sh -f16 -fs 2000 -a 2000 flash

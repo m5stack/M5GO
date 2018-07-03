@@ -36,14 +36,14 @@ def save_wifi(ssid, password):
 		wifidata = {}
 		wifidata['ssid'] = ssid
 		wifidata['password'] = password
-		with open("config.json", "r") as fo:
+		with open("wificonfig.json", "r") as fo:
 			cfg = fo.read()
-		with open("config.json", "w") as fo:
+		with open("wificonfig.json", "w") as fo:
 			cfg = json.loads(cfg)
 			cfg['wifi'] = wifidata
 			fo.write(json.dumps(cfg))
 	except:
-		with open("config.json", "w") as fo:
+		with open("wificonfig.json", "w") as fo:
 			cfg = {}
 			cfg['wifi'] = wifidata
 			fo.write(json.dumps(cfg))
