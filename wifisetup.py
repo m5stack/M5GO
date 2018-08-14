@@ -81,7 +81,7 @@ def isconnected():
 
 auto_connect()
 
-rtc = machine.RTC()
-print("Synchronize time from NTP server ...")
-lcd.println("Synchronize time from NTP server ...")
-rtc.ntp_sync(server="cn.ntp.org.cn")
+# rtc = machine.RTC()
+# print("Synchronize time from NTP server ...")
+# lcd.println("Synchronize time from NTP server ...")
+# rtc.ntp_sync(server="cn.ntp.org.cn")
