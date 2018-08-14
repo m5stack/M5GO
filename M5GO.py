@@ -12,7 +12,7 @@ import i2c_bus
 # import _thread
 # from M5GUI import *
 
-VERSION = "0.2.0"
+VERSION = "0.2.2"
 COLOR_GRAY = const(0xd7ceca)
 
 # -------- Neopixel LED ---------
@@ -482,7 +482,7 @@ def startup_start(obj):
 def startup_loop(obj):
     timeout = obj['timeout']
     # np = obj['np']
-    if buttonA.wasPressed() or (not exists('main.py')):  # GUIDE
+    if buttonA.wasPressed():  # GUIDE
         mainstate.change("STA_GUIDE")
         lcd.image(0, 0, 'img/2-1.jpg', type=lcd.JPG)  # Instruction img
     elif buttonC.wasPressed():  # SETUP
@@ -637,6 +637,9 @@ def main_enter_start(obj):
     lcd.setCursor(0, 0)
     network.WLANcallback(None)
     mainstate.stop()
+    if not exists('main.py'):
+        if exists('_main.py'):
+            os.rename('_main.py', 'main.py')
     gc.collect()
 
 

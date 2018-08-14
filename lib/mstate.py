@@ -5,19 +5,19 @@ class MState():
     self.on_start = start
     self.on_loop = loop
     self.on_end = end
-    self.param = {}
+    self.context = {}
 
   def start(self):
     if self.on_start:
-      self.on_start(self.param)
+      self.on_start(self.context)
   
   def loop(self):
     if self.on_loop:
-      self.on_loop(self.param)
+      self.on_loop(self.context)
 
   def end(self):
     if self.on_end:
-      self.on_end(self.param)
+      self.on_end(self.context)
       gc.collect()
 
 
@@ -38,6 +38,7 @@ class MStateManager():
 
   def register(self, state, mtask):
     self.mtask[state] = mtask
+    self.mtask[state].context['mstate'] = self
 
   def unregister(self, state):
     self.mtask.pop(state)
