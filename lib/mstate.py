@@ -10,7 +10,7 @@ class MState():
   def start(self):
     if self.on_start:
       self.on_start(self.context)
-  
+
   def loop(self):
     if self.on_loop:
       self.on_loop(self.context)
